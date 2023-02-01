@@ -25,6 +25,7 @@
 }
 
 \urlstyle{same}
+\definecolor{mygreen}{rgb}{0, 0.4, 0}
 
 \usepackage[detect-none]{siunitx}
 \sisetup{range-phrase = \text{--}}
@@ -197,57 +198,122 @@
 
 \begin{frame}
 \begin{itemize}
-	\item The path integral
+	\item<1-> The path integral
 	\begin{flalign*}
-		Z= \int DU D\psi D\bar\psi \,e^{-S_{gauge}-\bar \psi D_{deg}\psi - \bar \Psi D_{deg} \Psi }&&
+		Z= \int DU D\psi D\bar\psi \,e^{-S_{gauge}-\bar \psi M_{deg}\psi - \bar \Psi M_{deg} \Psi }&&
 	\end{flalign*}
-	\item Integrating fermion variables
+	\item<2-> Integrating fermion variables
 	\begin{flalign*}
-		Z= \int DU  \,e^{-S_{gauge} }\det{(D_{deg})}\det{(D_{ndeg})}&&
+		Z= \int DU  \,e^{-S_{gauge} }\det{(M_{deg})}\det{(M_{ndeg})}&&
 	\end{flalign*}
-	\item Even/odd Preconditioning
+	\item<3-> Even/odd Preconditioning
 	\begin{flalign*}
 		Z= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
-		\det{(Q_{+}Q_{-})}
-		\det{(M_{ee}^{h})}
-		\det{(Q^h)}&&
+		\det{(\hat Q_{+}\hat Q_{-})}
+		\det{(\hat Q_h)} \det{(M_{ee}^{h})}&&
 	\end{flalign*}
-	\item {\color{red} Hasenbusch trick}
+	\uncover<4->{
+	 \begin{hpcablock}{asymmetric even-odd preconditioning}
+		\begin{minipage}{\textwidth}
+			\vspace{-0.25cm}
+			\begin{columns}
+				\column{0.6\textwidth}
+%				\begin{equation*}
+%				\Qpm = \gamma_5 (M_{\text{clov}} \pm i \mu_\ell \gamma_5) \; \rightarrow \; (\Qp)^\dagger = \Qm
+%				\end{equation*}
+%				\begin{equation*}
+%				\det( \Qpm ) = \det( \Mee \pm i \mu_\ell \gamma_5 ) \cdot \det( \hQpm )
+%				\end{equation*}
+				\begin{equation*}
+				\hQpm = \gamma_5 \left[  \Moo   - \Moe \Mee^{-1} \Meo \right]
+				\end{equation*}
+				\begin{equation*}
+				 \Mee =1 + 2\kappa c_{SW} T_{ee} + i\tilde\mu\gamma_5
+				\end{equation*}
+				\column{0.4\textwidth}
+				\begin{itemize}
+					\item support for asym.\ precon not a given in most frameworks
+					\vspace{0.2cm}
+					\item issues with MG
+				\end{itemize}
+			\end{columns}
+		\end{minipage}
+	\end{hpcablock}
+	}
+	\uncover<5->{
+	\begin{hpcablock}{even-odd preconditioning in the heavy sector: $\tau^1 \; \rightarrow$ need genuine two-flavour operators}
+		\begin{equation*}
+	\hat	Q_h = \gamma_5 \left[ ( \Moo + i \mu_\sigma \gamma_5 \tau^3 - \mu_\delta \tau^1 ) - \Moe (\Mee + i \mu_\sigma \gamma_5 \tau^3 - \mu_\delta \tau^1 )^{-1} \Meo \right]
+		\end{equation*}
+	\end{hpcablock}
+	}
+\end{itemize}	
+\end{frame}
+\begin{frame}
+\begin{itemize}
+	\item<1-> {\color{red} Hasenbusch trick}
 	\begin{flalign*}
 	Z= \int DU  \,e^{-S_{gauge} }{\color{red}\det{\left(M_{ee}^+M_{ee}^-\right)}
-	\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\,}
+	\det{(\hat W_{+}\hat W_{-})}	\det{(\hat W_{+}^{-1}\hat Q_+\hat Q_-\hat W_{-}^{-1})}...\,}
 	\det{(M_{ee}^{h})}
-	\det{(Q^h)}&&
+	\det{(\hat Q_h)}&&
 	\end{flalign*}
-	\item {\color{blue} Rational HMC and correction}
+	\uncover<2->{
+	\begin{hpcablock}{degenerate determinant (ratios)}
+		\begin{itemize}
+	\item $\hWpm(\rho) = \hQpm \pm i \rho$ s.t. $\hWp(\rho) \hWm(\rho) = \hQp \hQm +\rho^2$ and clover inverse $\rho$-independent
+	\item 3-4 preconditioning masses, 2-3 timescales, MG solves for smallest $\rho$ 
+			\end{itemize}
+	\end{hpcablock}
+	}
+	\item<3-> {\color{blue} Rational HMC and correction}
 	\begin{multline*}
 	Z= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
-	\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\,\\
+	\det{(\hat W_{+}\hat W_{-})}	\det{(\hat W_{+}^{-1}\hat Q_+\hat Q_-\hat W_{-}^{-1})}...\,\\
 	\det{(M_{ee}^{h})}
-	{\color{blue}\det{(  r_1(Q^h) )}\det{(  r_2(Q^h) )}...\,\det{(|Q^h|{\cal R}(Q^h)}}
+	{\color{blue}\det{(  r_1(\hat Q_h) )}\det{(  r_2(\hat Q_h) )}...\,\det{(|\hat Q_h|{\cal R}(\hat Q_h)}}
 	\end{multline*}
+	\uncover<4->{\begin{hpcablock}{rational approximation partial fractions}
+		\vspace{-0.25cm}
+		\begin{minipage}{\textwidth}
+			\begin{columns}
+				\column{0.45\textwidth}
+				\begin{equation*}
+				\mathcal{R}(\hat Q_h^2) = \prod_{i=1}^{N} \frac{\hat Q^2_h + a_{2i-1}}{\hat Q^2_h + a_{2i}} \approx \frac{1}{\sqrt{\hat Q_h^2}}
+				\end{equation*}
+				\column{0.55\textwidth}
+				\begin{itemize}
+					\item $N \approx 10$, with $\mathcal{R}$ split across 2-3 monomials $r$ on 2-3 timescales (usually 3)
+					\item on CPU machines, accelerate solution of smallest shifts using DD-$\alpha$AMG {\scriptsize \textcolor{blue}{[ Bacchio, Finkenrath, 2019, \href{https://doi.org/10.1016/j.cpc.2018.10.013}{Comput.Phys.Commun. 236 (2019) 51-64}]}}
+				\end{itemize}
+			\end{columns}
+		\end{minipage}
+	\end{hpcablock}
+	}
 \end{itemize}	
 \end{frame}
 
 \begin{frame}
 	\begin{itemize}
-		\item Determinant evaluated with pseudofermions
+		\item Determinant evaluated with pseudofermions, diagonal operetor as $\det M_{ee}=\exp{\tr[\log M_{ee}]}$
 		\begin{flalign*}
-		Z&= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
-		\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\\
+		Z&= \int DUD\phi D\phi^*  \,e^{-S_{gauge} }{\color{blue}\det{\left(M_{ee}^+M_{ee}^-\right)}
+		\det{(\hat W_{+}\hat W_{-})}}
+	{\color{red}	\det{(\hat W_{+}^{-1}\hat Q_+\hat Q_-\hat W_{-}^{-1})}}...\\
 		&\hspace{7cm}\det{(M_{ee}^{h})}
-		\det{(  r_1(Q^h) )}\det{(  r_2(Q^h) )}...\,\det{|Q^h|{\cal R}(Q^h)}\\
-		&= \int DU  \,e^{-S_{gauge} } \underbrace{e^{-S_{det}}
-		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
+	{\color{mygreen}	\det{(  r_1(\hat Q_h) )}}\det{(  r_2(\hat Q_h) )}...\,
+	{\color{magenta}\det{|\hat Q_h|{\cal R}(\hat Q_h)}}\\
+		&= \int DU D\phi D\phi^*  \,e^{-S_{gauge} } \underbrace{\color{blue}e^{-S_{det}}
+		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{\color{red} e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
 		e^{-S_{det}^h}
-		e^{-S_{PF}^h}e^{-S_{PF}'^h}...\, e^{-S_{corr}}
+		\underbrace{\color{mygreen} e^{-S_{PF}^h}}_{\text{NDCLOVERRATCOR}}e^{-S_{PF}'^h}...\, \underbrace{ \color{magenta} e^{-S_{corr}}}_{\text{NDCLOVERRATCOR}}
 		\end{flalign*}
 		\item Molecular dynamics
 		\begin{align*}
 			\partial_t U&=\Pi\\
 			\partial_t \Pi&=\delta S_{gauge}+\delta S_{det}+\delta S_{PF}+\delta S_{PF}'+...+\delta S^h_{det}+\delta S^h_{PF}+\delta S'^h_{PF}+...+\delta S_{corr}
 		\end{align*}
-		\item Application of $D^{-1}$ inside the forces computed on the GPU with QUDA
+		\item Application and inversion of $\hat Q_\pm$ and $\hat Q_h$ on GPU with QUDA
 		\item $\delta S_{gauge}$ on QUDA
 		\item Porting $\delta S_{det}^{(h)}$, $\delta S_{PF}^{(h)}$ on QUDA in progress.
 	\end{itemize}
