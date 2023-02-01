@@ -1,0 +1,626 @@
+\documentclass[xcolor={dvipsnames,table}]{beamer}
+\geometry{paperwidth=190mm,paperheight=118.75mm}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+%\usetheme{Singapore}
+\usecolortheme{default}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{nicefrac}
+\usepackage{pifont}
+\usepackage{braket}
+\usepackage{colortbl}
+%\usepackage{wrapfig}
+%\usepackage{cutwin}
+\usepackage{background}
+\backgroundsetup{
+    %placement=bottom,
+    position={5.5,-0.3},
+    scale=2.5,
+    angle=0,
+    pages=some,
+    contents={MI250 PRELIMINARY}
+}
+
+\urlstyle{same}
+
+\usepackage[detect-none]{siunitx}
+\sisetup{range-phrase = \text{--}}
+
+\usepackage[most]{tcolorbox}
+
+\input{commands}
+
+%compact itemize, perfect for talks
+\setlength{\leftmargin}{0pt}
+\setlength{\leftmargini}{0.4cm}
+\setlength{\leftmarginii}{0.2cm}
+
+\usefonttheme{professionalfonts} 
+
+\newcommand{\roundbox}[1]{%
+\noindent\begin{tikzpicture}%
+  \draw node[draw=lightgray,fill=white,rounded corners,inner sep=1ex] {%
+  #1
+  };%
+\end{tikzpicture}%
+}%
+
+\definecolor{DarkBlue}{HTML}{002e77}
+
+\usetheme{Boadilla}
+\usecolortheme[named=DarkBlue]{structure}
+\useinnertheme{rounded}
+
+\graphicspath{{graphics/}}
+
+\title[tmLQCD + QUDA]{Twisted mass ensemble generation on GPU machines}
+\author[B.~Kostrzewa]{Bartosz Kostrzewa, M.~Garofalo, S.~Romiti \\ S.~Bacchio, J.~Finkenrath, F.~Pittler}
+\institute[HPC/A-Lab, Bonn~U.]{High Performance Computing \& Analytics Lab,\\ Rheinische Friedrich-Wilhelms-Universit{\"a}t Bonn}
+\date[August 8th, LAT'22, Bonn]{August 8th 2022, 39th International Symposium on Lattice Field Theory, Bonn}
+\titlegraphic{\roundbox{\includegraphics[height=2.5cm]{uni_bonn_hpca_hiskp_CyI_etmc}}}
+\subject{Twisted mass ensemble generation on GPU machines (using tmLQCD and the QUDA library)}
+\keywords{Lattice QCD, HMC, GPU, QUDA, simulation, tmLQCD}
+
+\setbeamertemplate{navigation symbols}{}
+
+\begin{document}
+
+\maketitle
+
+%\begin{frame}{Ensemble Overview}{$N_f=2+1+1$ twisted-clover}
+%                                                                                                                                           
+%  \includegraphics[height=70mm]{ensembles_L_vs_mpi}
+%  \includegraphics[height=70mm]{ensembles_asquared_mpi}
+%  \includegraphics[height=70mm]{ensembles_phys_point}
+%  \begin{hpcablock}{}
+%    \begin{itemize}
+%      \item $N_f = 2+1+1$ twisted-clover with $c_\text{SW} \sim 1 + 0.113(3) \dfrac{g_0^2}{\langle P \rangle}$ and strange and charm quark masses tuned to within a few \% of the physical point.
+%    \hfill \textcolor{blue}{[\footnotesize{\href{https://doi.org/10.1103/PhysRevD.98.054518}{Phys.Rev.D 98 (2018) 5, 054518}, \href{https://doi.org/10.22323/1.396.0284}{arXiv:2201.02551}}]}
+%    \vspace{0.2cm}
+%      \item $S_g = \frac{\beta}{3} \sum\limits_{x;P} \Big[ b_0 \lbrace 1 -  \text{ReTr} P^{1\times1}(x) \rbrace
+%                                       + b_1 \lbrace 1 -  \text{ReTr} P^{1\times2    }(x) \rbrace \Big]$ with 
+%      $b_0 = 1 - 8b_1, \, b_1=-0.331$ \hfill {\footnotesize{[Iwasaki; 1983]}}
+%    \end{itemize}
+%  \end{hpcablock}
+%
+%\end{frame}
+
+\begin{frame}{The cost of ensemble generation (at phys. $M_\pi$ on CPU machines)}
+  \centering
+  \includegraphics[height=65mm,clip,trim = 46mm 0 0 0]{ensembles_asquared_mpi}
+  \includegraphics[height=65mm]{ensembles_phys_point}
+  \,\,\,\,\,
+  \includegraphics[height=65mm]{corehrs_per_traj}
+
+  \begin{hpcablock}{}
+    \footnotesize
+    \begin{itemize}
+      \item State-of-the-art \textcolor{red}{integrator} \& \textcolor{blue}{solvers} $\rightarrow$ cost scales like $(L/a)^{9/2}$ at (roughly) constant acceptance
+      \vspace{0.19cm}
+      \item need several further ensembles at larger $M_\pi \cdot L$ 
+      \vspace{0.19cm}
+      \begin{itemize}
+        \item both at the finest and the coarsest lattice spacings
+          \begin{itemize}
+            \item more statistics needed due to autocorrelations (critical slowing down and pion mass splitting)
+          \end{itemize}
+      \end{itemize}
+      \item \textcolor{red}{cost $\mathcal{O}(10^{9})$ core-hours} \& real time per trajectory $\geq$ 6 hours at this stage
+      \vspace{0.19cm}
+      \item \textbf{Absolutely need GPU implementations of everything}
+    \end{itemize}
+  \end{hpcablock}
+\end{frame}
+
+\begin{frame}{The tmLQCD software suite}{[\href{https://doi.org/10.1016/j.cpc.2009.05.016}{10.1016/j.cpc.2009.05.016}, \href{https://doi.org/10.22323/1.187.0416}{10.22323/1.187.0416}, \href{https://doi.org/10.22323/1.187.0414}{10.22323/1.187.0414}, \href{https://www.github.com/etmc/tmLQCD}{gh.com/etmc/tmLQCD}]}
+  \begin{columns}
+    \column{0.6\textwidth}
+      \begin{itemize}
+        \item current HMC production code of the Extended Twisted Mass Collaboration (ETMC)
+        \vspace{0.2cm}
+        \item $\approx$ 150k lines (C), MPI + OpenMP, macro-based hardware specialization (intrinsics or inline assembly for SSE4, BlueGene[L,P,Q])
+        \vspace{0.2cm}
+        \item mainly 2 to 3 people over $\sim$ 20 years
+        \begin{itemize}
+          \item major contributions by another 3 to 4
+          \vspace{0.1cm}
+          \item small contributions by another 10 or so
+        \end{itemize}
+        \vspace{0.2cm}
+        \item since around 2015, rely on (and extend) libraries
+        \begin{itemize}
+          \item QPhiX for AVX2, AVX512 (B{\'a}lint Jo{\'o} et al.) \hfill \footnotesize{\textcolor{blue}{[\href{https://doi.org/10.1007/978-3-319-46079-6_30}{10.1007/978-3-319-46079-6\_30}, \href{https://github.com/JeffersonLab/qphix}{gh.com/JeffersonLab/qphix}]}}
+          \vspace{0.2cm}
+        \item DD-$\alpha$AMG for MG solver on CPU \\ \footnotesize{\textcolor{blue}{[\href{https://doi.org/10.1137/130919507}{10.1137/130919507}, \href{https://doi.org/10.48550/arXiv.1307.6101}{10.48550/arXiv.1307.6101}, \href{https://doi.org/10.1103/PhysRevD.94.114509}{10.1103/PhysRevD.94.114509}, \href{https://github.com/sbacchio/DDalphaAMG}{gh.com/sbacchio/DDalphaAMG}]}}
+          \vspace{0.2cm}
+        \item QUDA for GPU operators and solvers (Kate Clark et al.) \footnotesize{\textcolor{blue}{[\href{https://doi.org/10.1016/j.cpc.2010.05.002}{10.1016/j.cpc.2010.05.002}, \href{https://doi.org/10.1145/2063384.2063478}{10.1145/2063384.2063478}, \href{http://dx.doi.org/10.1109/SC.2016.67}{10.1109/SC.2016.67}] } }
+        \end{itemize}
+        \vspace{0.15cm}
+        \item long history of debates about future code for GPU machines without results (essentially lack of people power...)
+      \end{itemize}
+    \column{0.4\textwidth}
+      \centering
+      \begin{hpcablock}{}
+        \centering
+        \textcolor{blue}{\href{https://github.com/etmc/tmLQCD}{https://github.com/etmc/tmLQCD}}
+      \end{hpcablock}
+      \includegraphics[width=\textwidth]{tmlqcd_contributors.png}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Saved by the QUDA library}
+  \begin{columns}
+    \column{0.6\textwidth}
+      \begin{itemize}
+        \item First use with tmLQCD around 2015 (for observables)
+        \vspace{0.20cm}
+        \item Work on interface for HMC started in 2018, first running version in 2021 (motivated by QUDA performance-portability efforts)
+      \end{itemize}
+      \vspace{-0.3cm}
+      \footnotesize
+      \begin{verbatim}
+  BeginExternalInverter QUDA           # equivalents of QUDA tests
+    MGCoarseMuFactor = 1.0, 1.0, 60.0  # command line parameters
+    MGNumberOfLevels = 3
+    MGNumberOfVectors = 24, 32
+    MGSetupSolver = cg
+    [...]
+  EndExternalInverter
+  BeginMonomial CLOVERDETRATIO
+    Timescale = 3
+    kappa = 0.1394267
+    2KappaMu = 0.000200774448
+    rho = 0.0
+    rho2 = 0.0018
+    CSW = 1.69
+    AcceptancePrecision =  1.e-21
+    ForcePrecision = 1.e-18
+    Name = cloverdetratio3light
+    MaxSolverIterations = 500
+    solver = mg
+    useexternalinverter = quda         # enable QUDA pathway in solver
+    usesloppyprecision = single        # driver for this monomial
+  EndMonomial
+      \end{verbatim}
+    \column{0.4\textwidth}
+      \centering
+      \begin{hpcablock}{}
+        \centering
+        \textcolor{blue}{\href{https://github.com/lattice/quda}{https://github.com/lattice/quda}}
+      \end{hpcablock}
+      \includegraphics[height=90mm]{quda_contributors.png}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+	\item The path integral
+	\begin{flalign*}
+		Z= \int DU D\psi D\bar\psi \,e^{-S_{gauge}-\bar \psi D_{deg}\psi - \bar \Psi D_{deg} \Psi }&&
+	\end{flalign*}
+	\item Integrating fermion variables
+	\begin{flalign*}
+		Z= \int DU  \,e^{-S_{gauge} }\det{(D_{deg})}\det{(D_{ndeg})}&&
+	\end{flalign*}
+	\item Even/odd Preconditioning
+	\begin{flalign*}
+		Z= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
+		\det{(Q_{+}Q_{-})}
+		\det{(M_{ee}^{h})}
+		\det{(Q^h)}&&
+	\end{flalign*}
+	\item {\color{red} Hasenbusch trick}
+	\begin{flalign*}
+	Z= \int DU  \,e^{-S_{gauge} }{\color{red}\det{\left(M_{ee}^+M_{ee}^-\right)}
+	\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\,}
+	\det{(M_{ee}^{h})}
+	\det{(Q^h)}&&
+	\end{flalign*}
+	\item {\color{blue} Rational HMC and correction}
+	\begin{multline*}
+	Z= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
+	\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\,\\
+	\det{(M_{ee}^{h})}
+	{\color{blue}\det{(  r_1(Q^h) )}\det{(  r_2(Q^h) )}...\,\det{(|Q^h|{\cal R}(Q^h)}}
+	\end{multline*}
+\end{itemize}	
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item Determinant evaluated with pseudofermions
+		\begin{flalign*}
+		Z&= \int DU  \,e^{-S_{gauge} }\det{\left(M_{ee}^+M_{ee}^-\right)}
+		\det{(W_{+}W_{-})}	\det{(W_{+}^{-1}Q_+Q_-W_{-}^{-1})}...\\
+		&\hspace{7cm}\det{(M_{ee}^{h})}
+		\det{(  r_1(Q^h) )}\det{(  r_2(Q^h) )}...\,\det{|Q^h|{\cal R}(Q^h)}\\
+		&= \int DU  \,e^{-S_{gauge} } \underbrace{e^{-S_{det}}
+		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
+		e^{-S_{det}^h}
+		e^{-S_{PF}^h}e^{-S_{PF}'^h}...\, e^{-S_{corr}}
+		\end{flalign*}
+		\item Molecular dynamics
+		\begin{align*}
+			\partial_t U&=\Pi\\
+			\partial_t \Pi&=\delta S_{gauge}+\delta S_{det}+\delta S_{PF}+\delta S_{PF}'+...+\delta S^h_{det}+\delta S^h_{PF}+\delta S'^h_{PF}+...+\delta S_{corr}
+		\end{align*}
+		\item Application of $D^{-1}$ inside the forces computed on the GPU with QUDA
+		\item $\delta S_{gauge}$ on QUDA
+		\item Porting $\delta S_{det}^{(h)}$, $\delta S_{PF}^{(h)}$ on QUDA in progress.
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Hybrid CPU/GPU HMC}
+  \begin{columns}
+    \column{0.3\textwidth}
+      \begin{itemize}
+        \item gauge field and conjugate momenta in host memory
+        \vspace{0.20cm}
+        \item solvers and gauge term derivative on device 
+        \vspace{0.20cm}
+        \item need to keep track of gauge field state
+        \begin{itemize}
+          \item solution: tag host and device objects 
+          \vspace{0.1cm}
+          \item using checksum too restrictive
+          \vspace{0.1cm}
+          \item $\rightarrow$ simply use trajectory time (real number)
+          \vspace{0.10cm}
+          \item when host and device tags disagree, update device copy (optional: use thresholds)
+          \vspace{0.10cm}
+          \item nice side-effect: natural mechanism to track MG setup
+        \end{itemize}
+        \vspace{0.3cm}
+        \item incremental port: need good mechanisms to identify hotspots \textit{and} their causes
+      \end{itemize}
+       \column{0.7\textwidth}
+      \includegraphics[width=0.95\textwidth]{HMC_cpu_gpu}
+  \end{columns}
+\end{frame}
+
+%\begin{frame}{The problem with profiling tools}
+%  \centering
+%  \includegraphics[height=87mm]{hotspots_by_level}
+%  \begin{hpcablock}{}
+%    \begin{itemize}
+%      \item insufficient context
+%      \begin{itemize}
+%        \item same functions called in multiple places
+%        \item unclear if profile is physically sensible or result of specific problems with certain parameter combinations or algorithms
+%      \end{itemize}
+%    \end{itemize}
+%  \end{hpcablock}
+%\end{frame}
+
+\begin{frame}[fragile]{tmLQCD's profiler}
+      \begin{verbatim}
+tm_stopwatch_push(&g_timers, __func__, "");
+[...]
+tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+      \end{verbatim}
+  \begin{columns}
+    \column{0.35\textwidth}
+      \begin{itemize}
+        \item introduced stack-based profiler into tmLQCD (and accompanying analysis scripts)
+        \begin{itemize}
+          \item output simply to stdout with \texttt{level0/level1/level3/...} tags
+          \vspace{0.2cm}
+          \item analysis parses log file (176 lines of R) and renders Rmarkdown report
+          \vspace{0.2cm}
+          \item Tables and plots with context and identification of call tree depth
+          \vspace{0.2cm}
+          \item Visualize also QUDA's finalisation profile (see backup slides) 
+
+        \end{itemize}
+      \end{itemize}
+    \column{0.65\textwidth}
+      {%
+      \setlength{\fboxsep}{0pt}
+      \setlength{\fboxrule}{0.3pt}
+      \kern-0.66em\fbox{\includegraphics[width=0.18\textwidth,page=1]{n16_cA211.08.64_therm_m100}}
+      \fbox{\includegraphics[width=0.18\textwidth,page=2]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=3]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=4]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=5]{n16_cA211.08.64_therm_m100}}\\ 
+      \fbox{\includegraphics[width=0.18\textwidth,page=6]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=7]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=8]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=9]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=10]{n16_cA211.08.64_therm_m100}}\\
+      \fbox{\includegraphics[width=0.18\textwidth,page=11]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=12]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=13]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=14]{n16_cA211.08.64_therm_m100}} 
+      \fbox{\includegraphics[width=0.18\textwidth,page=15]{n16_cA211.08.64_therm_m100}}
+      }
+  \end{columns}
+\end{frame}
+
+\begin{frame}{tmLQCD's profiler}
+  \begin{columns}
+    \column{0.35\textwidth}
+      \begin{itemize}
+        \item combine view on physical and computational hotspots
+        \vspace{0.2cm}
+        \item focus on splitting of the MD Hamiltonian at this global level $\Rightarrow$
+        \vspace{0.2cm}
+      \end{itemize}
+    \column{0.65\textwidth}
+      \includegraphics[width=\textwidth]{hotspots_by_monomial}\\
+      \footnotesize (profile from $64^3 \cdot 128$ physical point simulation on 16 Marconi 100 nodes)
+  \end{columns}
+\end{frame}
+
+\begin{frame}{GPU-dominated parts}
+  \centering
+  \includegraphics[height=100mm]{gpu_dominated_monomial}
+\end{frame}
+  
+\begin{frame}{CPU-dominated parts}
+  \centering
+  \includegraphics[height=100mm]{cpu_dominated_monomial}
+\end{frame}
+
+\begin{frame}{MG solver in the light sector}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \centering
+      \includegraphics[width=0.9\textwidth]{mg_vs_cg} \\
+      \small{Comparison between MG-preconditioned-GCR and mixed-precision CG (GPU)\\
+      MG timing: two inversions + unavoidable overheads from coarse operator updates between $D$ and $D^\dagger$ inversions}
+    \column{0.5\textwidth}
+      \begin{hpcablock}{}
+        In practice we employ
+        \begin{itemize}
+          \item 2 to 3 $\rho$-shifts (shifting the EO-operator) 
+          \item 3-4 time scales
+        \end{itemize}
+        $\rightarrow$ per trajectory need to solve systems with: 
+        \begin{itemize}
+          \item $\rho = 0$ about $\mathcal{O}(100)$ times
+          \vspace{0.2cm}
+          \item $\rho \approx 0.001$ about $\mathcal{O}(100)$ times
+          \vspace{0.2cm}
+          \item $\rho \approx 0.01$ about $\mathcal{O}(200)$ times
+          \vspace{0.2cm}
+          \item $\rho \approx 0.1$ about $\mathcal{O}(400)$ times
+          \vspace{0.2cm}
+        \end{itemize}
+        MG requires two solves in derivative and an update of the coarse operator (due to twisted mass sign change), but easily wins up to $\rho \approx am_s$.
+
+        We employ both MG and CG to minimize total cost.
+      \end{hpcablock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Multi-shift solver for the $1+1$ sector}
+  \begin{columns}
+    \column{0.45\textwidth}
+      \centering
+      \includegraphics[width=0.95\textwidth]{quda_mshift_speedup}
+    \column{0.55\textwidth}
+      \begin{hpcablock}{Rational Approximation Correction Term}
+        \begin{itemize}
+          \item $64^3 \cdot 128$ lattice
+          \item CPU: 3072 cores Intel Platinum 8168 (64 Juwels nodes)
+          \item GPU: 32 A100 (8 Juwels Booster nodes)
+        \end{itemize}
+        \vspace{0.5cm}
+        \small
+          \begin{tabular}{lll}
+            Machine / Algorithm & HB & ACC \\
+            \hline \hline \\
+            (CPU) QPhiX multi-shift CG & 810 s & 550 s \\
+            (CPU) DD-$\alpha$AMG accelerated multi-shift CG & 590 s & 400 s \\
+            (GPU) QUDA mshift CG (double) & 145 s & 93 s \\ 
+            (GPU) QUDA mshift CG (single / single) & 127 s & 79 s \\ 
+            (GPU) QUDA mshift CG (single / half) & 103 s & 66 s 
+          \end{tabular}
+        \begin{itemize}
+          \item Similar real time improvements in the derivative terms
+          \item mixed-precision refinement really helps with the expensive solves (factor $\approx 1.5$)
+        \end{itemize}
+      \end{hpcablock}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{Current state of the port}
+  \begin{columns}
+    \column{0.45\textwidth}
+      \centering
+      \includegraphics[width=0.9\textwidth]{ndhrs_per_traj} \\
+      \footnotesize{(real trajectories at $M_\pi \sim 135$ MeV on $64^3 \cdot 128$ lattice)}
+    \column{0.55\textwidth}
+      \begin{tabular}{cccc}
+        machine                  & real time  & node-hours (CPU) / &    kWh      \\
+                                 &            & GPU-hours          &             \\
+        \hline \\
+        64 nodes         &  $2.61$ h  & 167                        &    $\sim 84$      \\
+        (Juwels)         &            &                            &             \\
+                         &            &                            &             \\
+        32 GPUs          &  $1.58$ h  & 50.6                       &    $\sim 24$    \\    
+        (Juwels Booster) &            &                            &                
+      \end{tabular}
+      \vspace{0.3cm}
+      \begin{itemize}
+        \item CPU strong scaling to 64 nodes okay, not great beyond that $\rightarrow$ real throughput limitation
+        \vspace{0.2cm}
+        \item gets (much) worse for larger volumes where many more nodes are required (depends on machine though) 
+        \vspace{0.2cm}
+        \item Improvement factor CPU/GPU in energy usage already $\sim 3.5$
+        \vspace{0.2cm}
+        \item Expect another factor of $2$ to $2.5$
+        \vspace{0.2cm}
+        \item Finally we will be able to run a trajectory in less than one hour again!
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Current state of the port}{HMC Strong scaling}
+  \begin{columns}
+    \column{0.50\textwidth}
+      \begin{hpcablock}{$64^3 \cdot 128$ @ $M_\pi \sim 135$ MeV}
+        \includegraphics[width=0.95\textwidth, page=1]{Juwels_Booster_HMC_Scaling}
+      \end{hpcablock}
+    \column{0.50\textwidth}
+      \begin{hpcablock}{$112^3 \cdot 224$ @ $M_\pi \sim 135$ MeV}
+        \includegraphics[width=0.95\textwidth, page=2]{Juwels_Booster_HMC_Scaling}
+      \end{hpcablock}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item see excellent whole-program scalability on Juwels Booster and very good absolute per trajectory times
+      \vspace{0.2cm}  
+    \item Scalability will get worse as we move the CPU-dominated parts fully to GPU
+      \begin{itemize}
+        \item more of the scaling behaviour will depend on the MG, which does not scale well by definition
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+  
+
+{
+\setbeamertemplate{background}{\BgMaterial}
+\begin{frame}{What about performance-portability?}
+  Single-node comparison on a $32^3 \times 64$ lattice on
+  \begin{itemize}
+    \item Juwels Booster ($4 \times$ A100)
+    \item Jureca DC-MI200 ($4 \times$ AMD MI-250, \texttt{ROCm 5.2.0}, \textcolor{red}{still being fine-tuned!}).
+  \end{itemize}
+  \vspace{0.2cm}
+
+  \begin{columns}
+    \column{0.48\textwidth}
+      \centering
+      \includegraphics[width=0.95\textwidth]{hip_vs_cuda_32c64} \\
+      (full HMC run, thermalised configuration, comparable acceptance rate)
+    \column{0.52\textwidth}
+      \begin{tabular}{cccc}
+        $(M_\pi / M_\pi^{\mathrm{phys}})^2$ & \cellcolor{green!50} time A100 [h] & \cellcolor{red!35}time MI250 [h] & ratio \\
+        \hline \hline 
+        3.75                                & 0.411         & 0.546          & 1.33 \\
+        2.25                                & 0.478         & 0.762          & 1.59 \\
+        1.50                                & 0.487         & 0.798          & 1.64 \\
+        1.00                                & 0.542         & 0.975          & 1.80
+      \end{tabular}
+      \vspace{0.2cm}
+      \begin{itemize}
+        \item Time investment (for us)\footnote{major thanks to B{\'a}lint Jo{\'o} and QUDA devs for many hundreds of hours of effort which make this possible!}: 
+        \begin{itemize}
+          \item 2-3 hours to adjust tmLQCD build system \& compile code
+          \item few hours with JSC admins and AMD experts to resolve a few ROCm issues
+          \vspace{0.2cm}
+          \item[!] get an HMC which runs on MI-250 and is \textit{at most} a factor of 2 slower even at the physical point (at least on a single node) $\rightarrow$ excellent!
+        \end{itemize}
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+%\begin{frame}{Origin of the performance difference?}{Fine-grid operator benchmark (single precision)}
+%  \begin{columns}
+%    \column{0.5\textwidth}
+%      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
+%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_dslash_bench} \\
+%        \begin{itemize}
+%          \item single node fine-grid operator performance up to factor 3 lower in region of highest relevance
+%          \item large local lattice: slightly faster than A100
+%        \end{itemize}    
+%      \end{hpcablock}
+%    \column{0.5\textwidth}
+%      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
+%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_dslash_bench} \\  
+%        \begin{itemize}
+%          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
+%            \begin{itemize}
+%              \item exchange overhead apparently higher than for A100 even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
+%            \end{itemize}
+%        \end{itemize}    
+%      \end{hpcablock}  
+%  \end{columns}
+%
+%\end{frame}
+%
+%\begin{frame}{Origin of the performance difference?}{Coarse-grid operator benchmark (single precision, 24 colours)}
+%  \begin{columns}
+%    \column{0.5\textwidth}
+%      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
+%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_mg_bench} \\
+%        \begin{itemize}
+%          \item single node coarse-grid operator performance up to factor 10 lower in region of highest relevance
+%        \end{itemize}    
+%      \end{hpcablock}
+%    \column{0.5\textwidth}
+%      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
+%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_mg_bench} \\  
+%        \begin{itemize}
+%          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
+%            \begin{itemize}
+%              \item major exchange overhead even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
+%            \end{itemize}
+%        \end{itemize}    
+%      \end{hpcablock}  
+%  \end{columns}
+%\end{frame}
+}
+
+\begin{frame}{Conclusions and Outlook}
+  \begin{itemize}
+    \item thanks to QUDA devs, we were able to improve our energy efficiency by factor of \# $\approx 3$ already, another factor of $\approx2$ remaining  
+    \vspace{0.2cm}
+    \item will allow us to complete ensemble set on current \& upcoming machines
+    \vspace{0.2cm}
+    \item probably the end of the line for tmLQCD
+    \begin{itemize}
+      \item C is too limiting, data layouts too inflexible 
+    \end{itemize}
+    \vspace{0.2cm}
+    \item time to join forces with others and / or redesign our toolset completely
+    \begin{itemize}
+      \item excellent performance of QUDA-MG means that it will play a role no matter what
+    \end{itemize}
+    \vspace{0.2cm}
+    \item prepare for modular exascale machines
+  \end{itemize}
+  \centering
+  \vspace{1.0cm}
+  \textbf{Thanks for your attention!}
+
+\end{frame}
+
+\backupbegin
+
+\begin{frame}{Backup}
+  \centering
+  \vspace{1.0cm}
+  \textbf{Backup Slides}
+\end{frame}
+
+\begin{frame}{QUDA's finalisation profile (backup)}
+  \begin{columns}
+    \column{0.35\textwidth}
+      \begin{itemize}
+        \item Same analysis script also visualises QUDA's finalisation profile 
+        \vspace{0.2cm}
+        \item in general spend 70 to 80 \% of QUDA time in compute
+        \vspace{0.2cm}
+        \item host-device memory traffic is a tiny overhead (for now)
+        \vspace{0.2cm}
+        \item our poor decisions: too much time spent in memory allocations and frequent reinitialisations (\textit{init} and \textit{preamble})
+        \vspace{0.2cm}
+        \item $\rightarrow$ some potential for future improvement here
+      \end{itemize}
+    \column{0.65\textwidth}
+      \vspace{0.1cm}
+      \centering
+      \includegraphics[width=0.89\textwidth]{quda_profile}
+  \end{columns}
+\end{frame}
+
+\backupend
+
+\end{document}

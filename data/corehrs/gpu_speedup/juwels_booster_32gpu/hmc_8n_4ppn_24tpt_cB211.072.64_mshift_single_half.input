@@ -1,0 +1,260 @@
+NrXProcs = 1
+NrYProcs = 1
+NrZprocs = 4
+
+# Number of OpenMP threads per MPI task, must be set equal to OMP_NUM_THREADS
+ompnumthreads = 24
+
+BeginExternalInverter QUDA 
+  Pipeline = 24
+  gcrNkrylov = 24
+  MGRunVerify = no
+  MGCoarseMuFactor = 1.0, 1.0, 60.0
+  MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 32
+  MGSetupSolver = cg
+  MGSetup2KappaMu = 0.000200774448
+  #MGVerbosity = silent, silent, silent
+  MGVerbosity = summarize, silent, silent
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+  MgCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGCoarseMaxSolverIterations = 25, 35, 50
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGSmootherTolerance = 0.2, 0.2, 0.2
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherPostIterations = 4, 4, 4
+  MGBlockSizesX = 4, 4
+  MGBlockSizesY = 4, 4
+  MGBlockSizesZ = 4, 2
+  MGBlockSizesT = 4, 2
+  MGOverUnderRelaxationFactor = 0.95, 0.95, 0.95
+  
+  MGRefreshSetupMDUThreshold = 0.033
+  MGRefreshSetupMaxSolverIterations = 30, 30
+  MGResetSetupMDUThreshold = 1.0
+EndExternalInverter
+
+
+### NO MODIFICATIONS ALLOWED BELOW THIS LINE
+
+# X Y and Z lattice dimensions
+L=64
+
+# T lattice dimension
+T=128
+
+Measurements = 1
+
+thermalisationsweeps = 0
+
+seed=9823617
+
+EigenvaluePrecision = 1e-7
+
+Startcondition = continue
+InitialStoreCounter = readin
+
+2KappaMu = 0.000200774448
+2KappaMuBar = 0.03476922657
+2KappaEpsBar = 0.03667067214
+CSW = 1.69
+kappa = 0.1394267
+
+NSave = 1
+ThetaT = 1.0
+UseEvenOdd = yes
+userelativeprecision = yes
+
+ReversibilityCheck = no
+ReversibilityCheckIntervall = 1
+
+DebugLevel = 2
+
+ReproduceRandomNumbers = no
+RanluxdLevel = 2
+
+BarrierMonomialsConverge = yes
+
+BeginMonomial GAUGE
+  Type = Iwasaki
+  beta = 1.778
+  Timescale = 0
+  UseExternalLibrary = quda
+EndMonomial
+
+BeginMonomial CLOVERDET
+  Timescale = 1
+  kappa = 0.1394267
+  2KappaMu = 0.000200774448
+  CSW = 1.69
+  rho = 0.14
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-16
+  Name = cloverdetlight
+
+  solver = cg
+  useexternalinverter = quda
+  usesloppyprecision = half
+  MaxSolverIterations = 5000
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 2
+  kappa = 0.1394267
+  2KappaMu = 0.000200774448
+  rho = 0.0160
+  rho2 = 0.14
+  CSW = 1.69
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-16
+  Name = cloverdetratio1light
+
+  solver = cg
+  useexternalinverter = quda
+  usesloppyprecision = half
+  MaxSolverIterations = 5000
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 3
+  kappa = 0.1394267
+  2KappaMu = 0.000200774448
+  rho = 0.0018
+  rho2 = 0.0160
+  CSW = 1.69
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-18
+  Name = cloverdetratio2light
+  
+  MaxSolverIterations = 500
+  solver = mg
+  usesloppyprecision = single
+  useexternalinverter = quda
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 3
+  kappa = 0.1394267
+  2KappaMu = 0.000200774448
+  # numerator shift
+  rho = 0.0
+  rho2 = 0.0018
+  CSW = 1.69
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-18
+  Name = cloverdetratio3light
+
+  MaxSolverIterations = 500
+  solver = mg
+  useexternalinverter = quda
+  usesloppyprecision = single
+EndMonomial
+
+BeginMonomial NDCLOVERRAT
+  Timescale = 1
+  kappa = 0.1394267
+  CSW = 1.69
+  AcceptancePrecision =  1e-21
+  ForcePrecision = 1e-16
+  StildeMin = 0.0000344
+  StildeMax = 4.3
+  Name = ndcloverrat1
+  DegreeOfRational = 10
+  Cmin = 0
+  Cmax = 4
+  ComputeEVFreq = 0
+  2Kappamubar = 0.03476922657
+  2Kappaepsbar = 0.03667067214
+  AddTrLog = yes
+
+  useexternalinverter = quda
+  solver = cgmmsnd
+  usesloppyprecision = single
+  refinementprecision = half
+EndMonomial
+
+BeginMonomial NDCLOVERRAT
+  Timescale = 2
+  kappa = 0.1394267
+  CSW = 1.69
+  AcceptancePrecision =  1e-21
+  ForcePrecision = 1e-16
+  StildeMin = 0.0000344
+  StildeMax = 4.3
+  Name = ndcloverrat2
+  DegreeOfRational = 10
+  Cmin = 5
+  Cmax = 6
+  ComputeEVFreq = 0
+  2Kappamubar = 0.03476922657
+  2Kappaepsbar = 0.03667067214
+  addTrLog = no
+  
+  useexternalinverter = quda
+  solver = cgmmsnd
+  usesloppyprecision = single
+  refinementprecision = half
+EndMonomial
+
+beginMonomial NDCLOVERRAT
+  timescale = 3
+  kappa = 0.1394267
+  cSW = 1.69
+  acceptancePrecision =  1e-21
+  forcePrecision = 1e-16
+  stildeMin = 0.0000344
+  stildeMax = 4.3
+  name = ndcloverrat3
+  degreeOfRational = 10
+  cmin = 7
+  cmax = 9
+  computeEVFreq = 0
+  2Kappamubar = 0.03476922657
+  2Kappaepsbar = 0.03667067214
+  addTrLog = no
+  
+  useexternalinverter = quda
+  solver = cgmmsnd
+  usesloppyprecision = single
+  refinementprecision = half
+EndMonomial
+
+beginMonomial NDCLOVERRATCOR
+  timescale = 0
+  kappa = 0.1394267
+  cSW = 1.69
+  acceptancePrecision =  1e-22
+  forcePrecision = 1e-16
+  stildeMin = 0.0000344
+  stildeMax = 4.3
+  name = ndcloverratcor
+  degreeOfRational = 10
+  computeEVFreq = 0
+  2Kappamubar = 0.03476922657
+  2Kappaepsbar = 0.03667067214
+  
+  useexternalinverter = quda
+  solver = cgmmsnd
+  usesloppyprecision = single
+  refinementprecision = half
+EndMonomial
+
+BeginIntegrator 
+  type0 = 2MNFG
+  type1 = 2MNFG
+  type2 = 2MNFG
+  type3 = 2MNFG 
+  integrationSteps0 = 1
+  integrationSteps1 = 1
+  integrationSteps2 = 1
+  integrationSteps3 = 15
+  tau = 1.0 
+  Lambda0 = 0.1666667
+  Lambda1 = 0.1666667
+  Lambda2 = 0.1666667
+  Lambda3 = 0.1666667
+  NumberOfTimescales = 4
+  MonitorForces = no
+EndIntegrator

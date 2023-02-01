@@ -1,0 +1,10 @@
+L     T      hrs_per_traj    ncores      integrator
+32    64     0.8             256         2MN # cA211.30.32 on Bonna
+64    128    2.6             4096        2MN # cB211.072.64 on SuperMUC
+80    160    3.5             6000        2MNFG # cC211.06.80 on SuperMUC-NG
+96    192    5.4             9216        2MNFG # cB211.072.96 on Juwels
+112   224    6.9             12544       2MNFG # cC211.060.112 on Frontera (as far as I could work out, this is a mixed 2MN / 2MNFG)
+# the run above is done super inefficiently...
+48    96     0.80            2304        2MNFG   # (cC211.20.48) on ?
+64    128    2.614           3072        2MNFG # cB211.072.64 using 2MNFG on 64 Juwels nodes (full test trajectory)
+# 64    128    1.56            7168        2MNFG # this ensemble was run in a pretty bad way ... (cC211.125.64)

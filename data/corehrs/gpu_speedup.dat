@@ -1,0 +1,3 @@
+L      T        ncores     gpus      hrs_per_traj   integrator machine
+64     128      3072       0         2.614          2MNFG      "3072 cores Intel Xeon Platinum 8168 (64 nodes)"
+64     128      384        32        1.575          2MNFG      "32 NVIDIA A100 + 384 cores AMD EPYC Rome 7402 (8 nodes)"
