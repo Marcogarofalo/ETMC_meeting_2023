@@ -1,4 +1,6 @@
 \documentclass[xcolor={dvipsnames,table}]{beamer}
+%\documentclass[handout]{beamer}
+
 \geometry{paperwidth=190mm,paperheight=118.75mm}
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath,amsfonts,amssymb}
@@ -23,7 +25,7 @@
     pages=some,
     contents={MI250 PRELIMINARY}
 }
-
+\usetikzlibrary{arrows,shapes}
 \urlstyle{same}
 \definecolor{mygreen}{rgb}{0, 0.4, 0}
 
@@ -283,7 +285,7 @@
 				\end{equation*}
 				\column{0.55\textwidth}
 				\begin{itemize}
-					\item $N \approx 10$, with $\mathcal{R}$ split across 2-3 monomials $r$ on 2-3 timescales (usually 3)
+					\item $N \approx 10$, with $\mathcal{R}$ split across 2-3 monomials $r_i(\hat Q_h)$ on 2-3 timescales (usually 3)
 					\item on CPU machines, accelerate solution of smallest shifts using DD-$\alpha$AMG {\scriptsize \textcolor{blue}{[ Bacchio, Finkenrath, 2019, \href{https://doi.org/10.1016/j.cpc.2018.10.013}{Comput.Phys.Commun. 236 (2019) 51-64}]}}
 				\end{itemize}
 			\end{columns}
@@ -293,9 +295,12 @@
 \end{itemize}	
 \end{frame}
 
+	\tikzstyle{na} = [baseline=-.5ex]
 \begin{frame}
 	\begin{itemize}
-		\item Determinant evaluated with pseudofermions, diagonal operetor as $\det M_{ee}=\exp{\tr[\log M_{ee}]}$
+		\item Diagonal operator $\det M_{ee}=\exp{\{\tr[\log M_{ee}]\}}$
+		\item Off-diagonal operator with pseudofermions
+		$\det{(\hat W_{+}\hat W_{-})}=\int D\phi D\phi^* \exp{\{ \phi^* (W_{+}\hat W_{-})^{-1}\phi \}}$
 		\begin{flalign*}
 		Z&= \int DUD\phi D\phi^*  \,e^{-S_{gauge} }{\color{blue}\det{\left(M_{ee}^+M_{ee}^-\right)}
 		\det{(\hat W_{+}\hat W_{-})}}
@@ -305,18 +310,52 @@
 	{\color{magenta}\det{|\hat Q_h|{\cal R}(\hat Q_h)}}\\
 		&= \int DU D\phi D\phi^*  \,e^{-S_{gauge} } \underbrace{\color{blue}e^{-S_{det}}
 		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{\color{red} e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
-		e^{-S_{det}^h}
-		\underbrace{\color{mygreen} e^{-S_{PF}^h}}_{\text{NDCLOVERRATCOR}}e^{-S_{PF}'^h}...\, \underbrace{ \color{magenta} e^{-S_{corr}}}_{\text{NDCLOVERRATCOR}}
+			\only<-1>{e^{-S_{det}^h}}
+			\only<2->{\tikz[anchor=base, baseline] \node[fill=magenta!40,rounded corners=2pt] (d1) {$e^{-S_{det}^h}$}; }
+		\underbrace{\color{mygreen} e^{-S_{PF}^h}}_{\text{NDCLOVERRAT}}e^{-S_{PF}'^h}...\,
+		\tikz[anchor=base, baseline]
+			 \node[fill=magenta!0,rounded corners=1pt] (d2) 	
+			 	{$\underbrace{ \color{magenta} e^{-S_{corr}}}_{				  \text{NDCLOVERRATCOR}}$}; 
 		\end{flalign*}
-		\item Molecular dynamics
+		\uncover<2->{\begin{tikzpicture}[overlay]
+		\path[->]  (10,1) edge [in=190, out=270]  (15,0.5);
+		\end{tikzpicture}}
+		\item<3-> Molecular dynamics
 		\begin{align*}
 			\partial_t U&=\Pi\\
-			\partial_t \Pi&=\delta S_{gauge}+\delta S_{det}+\delta S_{PF}+\delta S_{PF}'+...+\delta S^h_{det}+\delta S^h_{PF}+\delta S'^h_{PF}+...+\delta S_{corr}
+			\partial_t \Pi&=-\delta S_{gauge}-
+			%\only<2>
+			{{\color{blue}\delta S_{det}-\delta S_{PF}}}
+%			\only<3->{\underbrace{\color{blue}
+%					\delta S_{det}-\delta S_{PF}}_{\text{CLOVERDET}}}
+				-
+			%\only<2>
+			{{\color{red}\delta S_{PF}' }}
+%			\only<3->{\underbrace{\color{red}
+%					\delta S_{PF}'}_{\text{CLOERDETRATIO}}}
+				-...-
+				{\color{magenta}\delta S^h_{det}}
+				-
+			%\only<2>
+			{{\color{mygreen}\delta S^h_{PF}}}
+%			\only<3->{\underbrace{\color{mygreen}\delta S^h_{PF}}_{\text{NDCLOVERRAT}}}
+			-\delta S'^h_{PF}-...-
+			%\only<2>
+			{{\color{magenta}\delta S_{corr}}}
+%			\only<3->{\underbrace{\color{magenta}\delta S_{corr}}_{\text{NDCLOVERRATCOR}}}
 		\end{align*}
-		\item Application and inversion of $\hat Q_\pm$ and $\hat Q_h$ on GPU with QUDA
-		\item $\delta S_{gauge}$ on QUDA
-		\item Porting $\delta S_{det}^{(h)}$, $\delta S_{PF}^{(h)}$ on QUDA in progress.
+%		\uncover<4->{\begin{hpcablock}{ E.g. to compute $\delta S_{PF}$}
+%			\begin{equation}\nonumber
+%				(\blacksquare)_x=\tr_{Dirac}\left[i\gamma_5 \sigma_{\mu\nu} Y(x)\otimes X^\dagger + i\gamma_5\sigma_{\mu\nu} X(x)\otimes Y^\dagger\right]
+%			\end{equation}
+%			\end{hpcablock}
+%		}
+		\item<4-> Inversion of $\hat Q_\pm$, $\hat W_{\pm}$, $\hat Q_h$ on QUDA 
+		\item<5-> $\delta S_{gauge}$ on QUDA
+		\item<6-> Porting $\delta S_{det}^{(h)}$, $\delta S_{PF}^{(h)},...$ on QUDA in progress.
 	\end{itemize}
+	
+	
 \end{frame}
 
 
