@@ -495,36 +495,40 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 \end{frame}
 
 
-\begin{frame}[fragile]{Current state of the port}
+\begin{frame}[fragile]{Current state of the port and impact on simulation effort}
   \begin{columns}
     \column{0.45\textwidth}
       \centering
-      \includegraphics[width=0.9\textwidth]{ndhrs_per_traj} \\
-      \footnotesize{(real trajectories at $M_\pi \sim 135$ MeV on $64^3 \cdot 128$ lattice)}
+      \includegraphics[width=0.9\textwidth]{ndhrs_per_traj}
+      %\footnotesize{(real trajectories at $M_\pi \sim 135$ MeV on $64^3 \cdot 128$ lattice)}
     \column{0.55\textwidth}
-      \begin{tabular}{cccc}
-        machine                  & real time  & node-hours (CPU) / &    kWh      \\
-                                 &            & GPU-hours          &             \\
-        \hline \\
-        64 nodes         &  $2.61$ h  & 167                        &    $\sim 84$      \\
-        (Juwels)         &            &                            &             \\
-                         &            &                            &             \\
-        32 GPUs          &  $1.58$ h  & 50.6                       &    $\sim 24$    \\    
-        (Juwels Booster) &            &                            &                
-      \end{tabular}
-      \vspace{0.3cm}
       \begin{itemize}
-        \item CPU strong scaling to 64 nodes okay, not great beyond that $\rightarrow$ real throughput limitation
+        \item Expect another factor of $\sim 2$ on NVIDIA (fermionic forces)
         \vspace{0.2cm}
-        \item gets (much) worse for larger volumes where many more nodes are required (depends on machine though) 
+        \item Situation on AMD to be clarified (see next slide)
         \vspace{0.2cm}
-        \item Improvement factor CPU/GPU in energy usage already $\sim 3.5$
+        \item Real time / GPU-hours per trajectory for different lattice sizes.
         \vspace{0.2cm}
-        \item Expect another factor of $2$ to $2.5$
+        \item \textbf{Assuming perfect weak scaling.}
         \vspace{0.2cm}
-        \item Finally we will be able to run a trajectory in less than one hour again!
+      \item Number of trajectories achievable with typical Juwels Booster proposal (15 million coreh / 1.25 mio GPUh) and within one year (2 replicas running 24/7 for 350 days).
       \end{itemize}
   \end{columns}
+  \vspace{0.3cm}
+  \begin{minipage}{\textwidth}
+    \centering
+    \begin{tabular}{rrrrrr}
+      lattice size     & real time  & 1 year              & \# GPUs & GPU-hours & 1.25 mio GPUh \\
+                       & per traj.  & (2 replicas)        &         & per traj. &               \\
+      \hline \\                                           
+      $64^3\cdot128$   &  $1.6$ h   & 10500 traj.         &  32     &   51      & 24000 traj.   \\
+      $80^3\cdot160$   &  $1.8$ h   & 9600 traj.          &  80     &  139      &  9000 traj.   \\
+      $96^3\cdot192$   &  $2.2$ h   & 7600 traj.          & 144     &  317      &  3940 traj.   \\
+      $112^3\cdot224$  &  $2.8$ h   & 5900 traj.          & 224     &  635      &  1950 traj.   \\    
+      $128^3\cdot256$  &  $2.3$ h   & 7400 traj.          & 512     & 1158      &  1080 traj.   \\
+      $144^3\cdot288$  &  $3.1$ h   & 5500 traj.          & 648     & 1970      &   635 traj.
+    \end{tabular}
+  \end{minipage}
 \end{frame}
 
 \begin{frame}{Current state of the port}{HMC Strong scaling}
