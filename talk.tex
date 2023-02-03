@@ -28,7 +28,7 @@
 \usetikzlibrary{arrows,shapes}
 \urlstyle{same}
 \definecolor{mygreen}{rgb}{0, 0.4, 0}
-
+\usepackage{cancel}
 \usepackage[detect-none]{siunitx}
 \sisetup{range-phrase = \text{--}}
 
@@ -62,7 +62,7 @@
 \title[tmLQCD + QUDA]{Twisted mass ensemble generation on GPU machines}
 \author[B.~Kostrzewa]{Bartosz Kostrzewa, M.~Garofalo, S.~Romiti \\ S.~Bacchio, J.~Finkenrath, F.~Pittler}
 \institute[HPC/A-Lab, Bonn~U.]{High Performance Computing \& Analytics Lab,\\ Rheinische Friedrich-Wilhelms-Universit{\"a}t Bonn}
-\date[August 8th, LAT'22, Bonn]{August 8th 2022, 39th International Symposium on Lattice Field Theory, Bonn}
+\date[Febrary 8th, ETMC meeting 2023 Bern]{Febrary 8th, ETMC meeting 2023, Bern}
 \titlegraphic{\roundbox{\includegraphics[height=2.5cm]{uni_bonn_hpca_hiskp_CyI_etmc}}}
 \subject{Twisted mass ensemble generation on GPU machines (using tmLQCD and the QUDA library)}
 \keywords{Lattice QCD, HMC, GPU, QUDA, simulation, tmLQCD}
@@ -295,7 +295,6 @@
 \end{itemize}	
 \end{frame}
 
-	\tikzstyle{na} = [baseline=-.5ex]
 \begin{frame}
 	\begin{itemize}
 		\item Diagonal operator $\det M_{ee}=\exp{\{\tr[\log M_{ee}]\}}$
@@ -303,24 +302,42 @@
 		$\det{(\hat W_{+}\hat W_{-})}=\int D\phi D\phi^* \exp{\{ \phi^* (W_{+}\hat W_{-})^{-1}\phi \}}$
 		\begin{flalign*}
 		Z&= \int DUD\phi D\phi^*  \,e^{-S_{gauge} }{\color{blue}\det{\left(M_{ee}^+M_{ee}^-\right)}
-		\det{(\hat W_{+}\hat W_{-})}}
-	{\color{red}	\det{(\hat W_{+}^{-1}\hat Q_+\hat Q_-\hat W_{-}^{-1})}}...\\
+			\det{(\hat W_{+}\hat W_{-})}}
+		{\color{red}	\det{(\hat W_{+}^{-1}\hat Q_+\hat Q_-\hat W_{-}^{-1})}}...\\
 		&\hspace{7cm}\det{(M_{ee}^{h})}
-	{\color{mygreen}	\det{(  r_1(\hat Q_h) )}}\det{(  r_2(\hat Q_h) )}...\,
-	{\color{magenta}\det{|\hat Q_h|{\cal R}(\hat Q_h)}}\\
+		{\color{mygreen}	\det{(  r_1(\hat Q_h) )}}\det{(  r_2(\hat Q_h) )}...\,
+		{\color{magenta}\det{|\hat Q_h|{\cal R}(\hat Q_h)}}\\
 		&= \int DU D\phi D\phi^*  \,e^{-S_{gauge} } \underbrace{\color{blue}e^{-S_{det}}
-		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{\color{red} e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
-			\only<-1>{e^{-S_{det}^h}}
-			\only<2->{\tikz[anchor=base, baseline] \node[fill=magenta!40,rounded corners=2pt] (d1) {$e^{-S_{det}^h}$}; }
+			e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{\color{red} e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
+		\only<-1>{e^{-S_{det}^h}}
+		\only<2->{\tikz[anchor=base, baseline] \node[fill=mygreen!40,rounded corners=2pt] (d1) {$e^{-S_{det}^h}$}; }
 		\underbrace{\color{mygreen} e^{-S_{PF}^h}}_{\text{NDCLOVERRAT}}e^{-S_{PF}'^h}...\,
+		\tikz[anchor=base, baseline]
+		\node[fill=magenta!0,rounded corners=1pt] (d2) 	
+		{$\underbrace{ \color{magenta} e^{-S_{corr}}}_{				  \text{NDCLOVERRATCOR}}$}; 
+		\end{flalign*}
+		\uncover<2->{\begin{tikzpicture}[overlay]
+			\path[->]  (10,1) edge [in=220, out=270]  (12,0.5);
+			\end{tikzpicture}}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item Partition function
+		\begin{flalign*}
+		Z&= 
+		 \int DU D\phi D\phi^*  \,e^{-S_{gauge} } \underbrace{\color{blue}e^{-S_{det}}
+		e^{-S_{PF}}}_{\text{CLOVERDET} } \underbrace{\color{red} e^{-S_{PF}'}}_{\text{CLOERDETRATIO}}...\,
+		\underbrace{\color{mygreen}e^{-S_{det}^h} e^{-S_{PF}^h}}_{\text{NDCLOVERRAT}}e^{-S_{PF}'^h}...\,
 		\tikz[anchor=base, baseline]
 			 \node[fill=magenta!0,rounded corners=1pt] (d2) 	
 			 	{$\underbrace{ \color{magenta} e^{-S_{corr}}}_{				  \text{NDCLOVERRATCOR}}$}; 
 		\end{flalign*}
-		\uncover<2->{\begin{tikzpicture}[overlay]
-		\path[->]  (10,1) edge [in=190, out=270]  (15,0.5);
-		\end{tikzpicture}}
-		\item<3-> Molecular dynamics
+		\item<1-> HMC
+		\begin{enumerate}
+			\item[1)]<2-> Heat bath pseudofermions and momenta
+		\item[2)]<3-> Molecular dynamics
 		\begin{align*}
 			\partial_t U&=\Pi\\
 			\partial_t \Pi&=-\delta S_{gauge}-
@@ -334,14 +351,13 @@
 %			\only<3->{\underbrace{\color{red}
 %					\delta S_{PF}'}_{\text{CLOERDETRATIO}}}
 				-...-
-				{\color{magenta}\delta S^h_{det}}
+				{\color{mygreen}\delta S^h_{det}
 				-
-			%\only<2>
-			{{\color{mygreen}\delta S^h_{PF}}}
+			{\color{mygreen}\delta S^h_{PF}}}
 %			\only<3->{\underbrace{\color{mygreen}\delta S^h_{PF}}_{\text{NDCLOVERRAT}}}
 			-\delta S'^h_{PF}-...-
 			%\only<2>
-			{{\color{magenta}\delta S_{corr}}}
+				\bcancel{{\color{magenta} \delta S_{corr}}}
 %			\only<3->{\underbrace{\color{magenta}\delta S_{corr}}_{\text{NDCLOVERRATCOR}}}
 		\end{align*}
 %		\uncover<4->{\begin{hpcablock}{ E.g. to compute $\delta S_{PF}$}
@@ -350,9 +366,14 @@
 %			\end{equation}
 %			\end{hpcablock}
 %		}
-		\item<4-> Inversion of $\hat Q_\pm$, $\hat W_{\pm}$, $\hat Q_h$ on QUDA 
-		\item<5-> $\delta S_{gauge}$ on QUDA
-		\item<6-> Porting $\delta S_{det}^{(h)}$, $\delta S_{PF}^{(h)},...$ on QUDA in progress.
+		\item[3)]<4-> Accept/reject $\min\{ 1, e^{-\Delta S}\}$
+		\end{enumerate}
+		\item<5-> Most expensive part: the inversion of  $\hat Q_\pm$, $\hat W_{\pm}$, $\hat Q_h$ in on QUDA 
+		\item<6-> $\delta S_{gauge}$ on QUDA
+		\item<7-> Porting the other $\delta S_{X}$ on QUDA in
+		 progress. We start from the simpler ${{\color{blue}\delta S_{det}+\delta S_{PF}}}$
+		\item<8-> Porting eigenvalues measurements on QUDA in progress
+		\item<9-> Gradient flow measurements on QUDA 
 	\end{itemize}
 	
 	
