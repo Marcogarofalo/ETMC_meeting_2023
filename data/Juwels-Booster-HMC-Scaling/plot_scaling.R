@@ -7,6 +7,7 @@ require(ggrepel)
 dat <- read.table("scaling.dat", header=TRUE)
 
 dat <- dplyr::mutate(dat, gpus = nodes * 4,
+                          traj_tts = traj_tts * 0.06667, # the timings here are not real trajectories
                           traj_nodeh = nodes * traj_tts / 3600,
                           type = "")
 tikzfiles <- tikz.init("Booster_LUMIG_HMC_Scaling", width = 3.0, height = 2.0)
