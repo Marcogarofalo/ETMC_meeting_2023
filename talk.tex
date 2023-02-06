@@ -60,8 +60,8 @@
 \graphicspath{{graphics/}}
 
 \title[tmLQCD + QUDA]{Twisted mass ensemble generation on GPU machines}
-\author[B.~Kostrzewa]{Bartosz Kostrzewa, M.~Garofalo, S.~Romiti \\ S.~Bacchio, J.~Finkenrath, F.~Pittler}
-\institute[HPC/A-Lab, Bonn~U.]{High Performance Computing \& Analytics Lab,\\ Rheinische Friedrich-Wilhelms-Universit{\"a}t Bonn}
+\author[M.~Garofalo / B.~Kostrzewa]{M.~Garofalo, B.~Kostrzewa, S.~Romiti, C.~Urbach \\ S.~Bacchio, J.~Finkenrath, F.~Pittler}
+\institute[HISKP / HPC/A-Lab, Bonn~U.]{Helmholtz-Insituts für Strahlen- und Kernphysik\\High Performance Computing \& Analytics Lab,\\ Rheinische Friedrich-Wilhelms-Universit{\"a}t Bonn}
 \date[Febrary 8th, ETMC meeting 2023 Bern]{Febrary 8th, ETMC meeting 2023, Bern}
 \titlegraphic{\roundbox{\includegraphics[height=2.5cm]{uni_bonn_hpca_hiskp_CyI_etmc}}}
 \subject{Twisted mass ensemble generation on GPU machines (using tmLQCD and the QUDA library)}
@@ -608,7 +608,7 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
       \centering
       \footnotesize
       \begin{tabular}{cccc}
-        \# nodes & \textcolor{blue}{Booster} & textcolor{red}{LUMI-G} & ratio (\textcolor{red}{LUMI-G} / \textcolor{blue}{Booster}) \\
+        \# nodes & \textcolor{blue}{Booster} & \textcolor{red}{LUMI-G} & ratio (\textcolor{red}{LUMI-G} / \textcolor{blue}{Booster}) \\
         4        & 947 s & 1400 s & 1.48 \\
         8        & 513 s &  900 s & 1.76 \\
         16       & 287 s &  720 s & 2.51 \\
