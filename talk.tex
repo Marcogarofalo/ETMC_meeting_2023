@@ -623,43 +623,6 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Pinning MPI tasks, GPUs and network interfaces on \textcolor{red}{LUMI-G}}
-  \vspace{-0.4cm}
-  \begin{columns}
-    \small
-    \column{0.4\textwidth}
-    \vspace{-0.6cm}
-  \begin{verbatim}
-if [ $SLURM_LOCALID = "0" ]
-then
-    NUMA=3
-    HCA=hsn0
-    GPU=0
-    threads=49-55,113-119
-fi
-if [ $SLURM_LOCALID = "1" ]
-[....]
-if [ $SLURM_LOCALID = "7" ]
-then
-    NUMA=2
-    HCA=hsn3
-    GPU=7
-    threads=41-47,105-111
-fi
-
-[...]
-
-CMD="env MPICH_OFI_NIC_VERBOSE=2 MPICH_OFI_NIC_POLICY=NUMA
-numactl --physcpubind=${threads} --membind=$NUMA -- $exe ${args[@]}"
-echo $CMD
-$CMD
----> srun --cpu-bind=none ./lumi_pinwrapper.sh ${exe}
-  \end{verbatim}
-    \column{0.6\textwidth}
-      \includegraphics[width=\textwidth]{lumig-node-architecture}
-      \vspace{2.5cm}
-  \end{columns}
-\end{frame}
 
 %%{
 %%\setbeamertemplate{background}{\BgMaterial}
@@ -698,52 +661,89 @@ $CMD
 %%  \end{columns}
 %%\end{frame}
 
-%\begin{frame}{Origin of the performance difference?}{Fine-grid operator benchmark (single precision)}
-%  \begin{columns}
-%    \column{0.5\textwidth}
-%      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
-%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_dslash_bench} \\
-%        \begin{itemize}
-%          \item single node fine-grid operator performance up to factor 3 lower in region of highest relevance
-%          \item large local lattice: slightly faster than A100
-%        \end{itemize}    
-%      \end{hpcablock}
-%    \column{0.5\textwidth}
-%      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
-%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_dslash_bench} \\  
-%        \begin{itemize}
-%          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
-%            \begin{itemize}
-%              \item exchange overhead apparently higher than for A100 even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
-%            \end{itemize}
-%        \end{itemize}    
-%      \end{hpcablock}  
-%  \end{columns}
-%
-%\end{frame}
-%
-%\begin{frame}{Origin of the performance difference?}{Coarse-grid operator benchmark (single precision, 24 colours)}
-%  \begin{columns}
-%    \column{0.5\textwidth}
-%      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
-%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_mg_bench} \\
-%        \begin{itemize}
-%          \item single node coarse-grid operator performance up to factor 10 lower in region of highest relevance
-%        \end{itemize}    
-%      \end{hpcablock}
-%    \column{0.5\textwidth}
-%      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
-%        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_mg_bench} \\  
-%        \begin{itemize}
-%          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
-%            \begin{itemize}
-%              \item major exchange overhead even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
-%            \end{itemize}
-%        \end{itemize}    
-%      \end{hpcablock}  
-%  \end{columns}
-%\end{frame}
-}
+\begin{frame}{Origin of the performance difference?}{Fine-grid operator benchmark (single precision)}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
+        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_dslash_bench} \\
+        \begin{itemize}
+          \item single node fine-grid operator performance up to factor 3 lower in region of highest relevance
+          \item large local lattice: slightly faster than A100
+        \end{itemize}    
+      \end{hpcablock}
+    \column{0.5\textwidth}
+      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
+        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_dslash_bench} \\  
+        \begin{itemize}
+          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
+            \begin{itemize}
+              \item exchange overhead apparently higher than for A100 even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
+            \end{itemize}
+        \end{itemize}    
+      \end{hpcablock}  
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}{Origin of the performance difference?}{Coarse-grid operator benchmark (single precision, 24 colours)}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \begin{hpcablock}{full node (4 A100 GPUs / 8 MI250 GCDs)}
+        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_mg_bench} \\
+        \begin{itemize}
+          \item single node coarse-grid operator performance up to factor 10 lower in region of highest relevance
+        \end{itemize}    
+      \end{hpcablock}
+    \column{0.5\textwidth}
+      \begin{hpcablock}{single GPU/GCD vs. 2 GPUs/GCDs (strong scaling)}
+        \includegraphics[width=0.98\textwidth]{hip_vs_cuda_single_gpu_mg_bench} \\  
+        \begin{itemize}
+          \item single GPU / single GCD performance (dashed, semi-transparent) vs. 2 GPUs / 2 GCDs
+            \begin{itemize}
+              \item major exchange overhead even on same MCM (\texttt{HIP\_VISIBLE\_DEVICES=0,1})
+            \end{itemize}
+        \end{itemize}    
+      \end{hpcablock}  
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Pinning MPI tasks, GPUs and network interfaces on \textcolor{red}{LUMI-G}}
+  \vspace{-0.4cm}
+  \begin{columns}
+    \small
+    \column{0.4\textwidth}
+    \vspace{-0.6cm}
+  \begin{verbatim}
+if [ $SLURM_LOCALID = "0" ]
+then
+    NUMA=3
+    HCA=hsn0
+    GPU=0
+    threads=49-55,113-119
+fi
+if [ $SLURM_LOCALID = "1" ]
+[....]
+if [ $SLURM_LOCALID = "7" ]
+then
+    NUMA=2
+    HCA=hsn3
+    GPU=7
+    threads=41-47,105-111
+fi
+
+[...]
+
+CMD="env MPICH_OFI_NIC_VERBOSE=2 MPICH_OFI_NIC_POLICY=NUMA
+numactl --physcpubind=${threads} --membind=$NUMA -- $exe ${args[@]}"
+echo $CMD
+$CMD
+---> srun --cpu-bind=none ./lumi_pinwrapper.sh ${exe}
+  \end{verbatim}
+    \column{0.6\textwidth}
+      \includegraphics[width=\textwidth]{lumig-node-architecture}
+      \vspace{2.5cm}
+  \end{columns}
+\end{frame}
 
 \begin{frame}{Conclusions and Outlook}
   \begin{itemize}

@@ -7,7 +7,7 @@ $(addsuffix .pdf,$(NAMES)): $(addsuffix .tex, $(NAMES)) Makefile commands.tex gr
 	pdfcompress mg_bk_etmc_meeting2023.pdf talk.pdf /printer
 
 clean:
-	latexmk -f -c
+	latexmk -f -CA
 	rm mg_bk_etmc_meeting2023.pdf
 
 distclean:
