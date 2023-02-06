@@ -1,10 +1,15 @@
-L   nodes traj_tts
-64  4     14205
-64  8     7687.5
-64  16    4297.5
-64  32    2790
-112 28    28888
-112 49    17536
-112 56    14760
-112 98    9608
-112 112   8600
+machine  L   nodes traj_tts
+booster  64  4     14205
+booster  64  8     7687.5
+booster  64  16    4297.5
+booster  64  32    2790
+lumig    64  2     36598
+lumig    64  4     20998.95
+lumig    64  8     13499.33
+lumig    64  16    10799.46
+lumig    64  32    8549.573
+booster  112 28    28888
+booster  112 49    17536
+booster  112 56    14760
+booster  112 98    9608
+booster  112 112   8600

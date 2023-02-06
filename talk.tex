@@ -591,28 +591,74 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   \end{minipage}
 \end{frame}
 
-\begin{frame}{Current state of the port}{HMC Strong scaling}
+\begin{frame}{Current state of the port on \textcolor{blue}{Booster} / \textcolor{red}{LUMI-G} }{HMC Strong scaling}
   \begin{columns}
     \column{0.50\textwidth}
-      \begin{hpcablock}{$64^3 \cdot 128$ @ $M_\pi \sim 135$ MeV}
-        \includegraphics[width=0.95\textwidth, page=1]{Juwels_Booster_HMC_Scaling}
+      \begin{hpcablock}{$64^3 \cdot 128$ @ $M_\pi \sim 135$ MeV on \textcolor{blue}{Booster}}
+        \includegraphics[width=0.95\textwidth, page=1]{Booster_LUMIG_HMC_Scaling}
       \end{hpcablock}
     \column{0.50\textwidth}
-      \begin{hpcablock}{$112^3 \cdot 224$ @ $M_\pi \sim 135$ MeV}
-        \includegraphics[width=0.95\textwidth, page=2]{Juwels_Booster_HMC_Scaling}
+      \begin{hpcablock}{$64^3 \cdot 128$ @ $M_\pi \sim 135$ MeV on \textcolor{red}{LUMI-G}}
+        \includegraphics[width=0.95\textwidth, page=2]{Booster_LUMIG_HMC_Scaling}
       \end{hpcablock}
   \end{columns}
   \vspace{0.2cm}
-  \begin{itemize}
-    \item see excellent whole-program scalability on Juwels Booster and very good absolute per trajectory times
-      \vspace{0.2cm}  
-    \item Scalability will get worse as we move the CPU-dominated parts fully to GPU
+  \begin{columns}
+    \column{0.50\textwidth}
+      \centering
+      \begin{tabular}{cc}
+        \# nodes & ratio (LUMI-G / Booster) \\
+        4        & 1.48 \\
+        8        & 1.76 \\
+        16       & 2.51 \\
+        32       & 3.06
+      \end{tabular}
+    \column{0.50\textwidth}
       \begin{itemize}
-        \item more of the scaling behaviour will depend on the MG, which does not scale well by definition
+        \item slow-down compared to Booster: factor 1.5 to 3
+        \item (mixed) CG on 8 nodes about the same performance
+        \item MG about factor 5 \textbf{slower} on LUMI-G (untuned)
       \end{itemize}
-  \end{itemize}
+  \end{columns}
 \end{frame}
-  
+
+\begin{frame}[fragile]{Pinning MPI tasks, GPUs and network interfaces on \textcolor{red}{LUMI-G}}
+  \vspace{-0.4cm}
+  \begin{columns}
+    \small
+    \column{0.4\textwidth}
+    \vspace{-0.6cm}
+  \begin{verbatim}
+if [ $SLURM_LOCALID = "0" ]
+then
+    NUMA=3
+    HCA=hsn0
+    GPU=0
+    threads=49-55,113-119
+fi
+if [ $SLURM_LOCALID = "1" ]
+[....]
+if [ $SLURM_LOCALID = "7" ]
+then
+    NUMA=2
+    HCA=hsn3
+    GPU=7
+    threads=41-47,105-111
+fi
+
+[...]
+
+CMD="env MPICH_OFI_NIC_VERBOSE=2 MPICH_OFI_NIC_POLICY=NUMA
+numactl --physcpubind=${threads} --membind=$NUMA -- $exe ${args[@]}"
+echo $CMD
+$CMD
+---> srun --cpu-bind=none ./lumi_pinwrapper.sh ${exe}
+  \end{verbatim}
+    \column{0.6\textwidth}
+      \includegraphics[width=\textwidth]{lumig-node-architecture}
+      \vspace{2.5cm}
+  \end{columns}
+\end{frame}
 
 {
 \setbeamertemplate{background}{\BgMaterial}
