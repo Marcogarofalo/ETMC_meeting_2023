@@ -606,12 +606,13 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   \begin{columns}
     \column{0.50\textwidth}
       \centering
-      \begin{tabular}{cc}
-        \# nodes & ratio (LUMI-G / Booster) \\
-        4        & 1.48 \\
-        8        & 1.76 \\
-        16       & 2.51 \\
-        32       & 3.06
+      \footnotesize
+      \begin{tabular}{cccc}
+        \# nodes & \textcolor{blue}{Booster} & textcolor{red}{LUMI-G} & ratio (\textcolor{red}{LUMI-G} / \textcolor{blue}{Booster}) \\
+        4        & 947 s & 1400 s & 1.48 \\
+        8        & 513 s &  900 s & 1.76 \\
+        16       & 287 s &  720 s & 2.51 \\
+        32       & 186 s &  570 s & 3.06
       \end{tabular}
     \column{0.50\textwidth}
       \begin{itemize}
@@ -660,42 +661,42 @@ $CMD
   \end{columns}
 \end{frame}
 
-{
-\setbeamertemplate{background}{\BgMaterial}
-\begin{frame}{What about performance-portability?}
-  Single-node comparison on a $32^3 \times 64$ lattice on
-  \begin{itemize}
-    \item Juwels Booster ($4 \times$ A100)
-    \item Jureca DC-MI200 ($4 \times$ AMD MI-250, \texttt{ROCm 5.2.0}, \textcolor{red}{still being fine-tuned!}).
-  \end{itemize}
-  \vspace{0.2cm}
-
-  \begin{columns}
-    \column{0.48\textwidth}
-      \centering
-      \includegraphics[width=0.95\textwidth]{hip_vs_cuda_32c64} \\
-      (full HMC run, thermalised configuration, comparable acceptance rate)
-    \column{0.52\textwidth}
-      \begin{tabular}{cccc}
-        $(M_\pi / M_\pi^{\mathrm{phys}})^2$ & \cellcolor{green!50} time A100 [h] & \cellcolor{red!35}time MI250 [h] & ratio \\
-        \hline \hline 
-        3.75                                & 0.411         & 0.546          & 1.33 \\
-        2.25                                & 0.478         & 0.762          & 1.59 \\
-        1.50                                & 0.487         & 0.798          & 1.64 \\
-        1.00                                & 0.542         & 0.975          & 1.80
-      \end{tabular}
-      \vspace{0.2cm}
-      \begin{itemize}
-        \item Time investment (for us)\footnote{major thanks to B{\'a}lint Jo{\'o} and QUDA devs for many hundreds of hours of effort which make this possible!}: 
-        \begin{itemize}
-          \item 2-3 hours to adjust tmLQCD build system \& compile code
-          \item few hours with JSC admins and AMD experts to resolve a few ROCm issues
-          \vspace{0.2cm}
-          \item[!] get an HMC which runs on MI-250 and is \textit{at most} a factor of 2 slower even at the physical point (at least on a single node) $\rightarrow$ excellent!
-        \end{itemize}
-      \end{itemize}
-  \end{columns}
-\end{frame}
+%%{
+%%\setbeamertemplate{background}{\BgMaterial}
+%%\begin{frame}{What about performance-portability?}
+%%  Single-node comparison on a $32^3 \times 64$ lattice on
+%%  \begin{itemize}
+%%    \item Juwels Booster ($4 \times$ A100)
+%%    \item Jureca DC-MI200 ($4 \times$ AMD MI-250, \texttt{ROCm 5.2.0}, \textcolor{red}{still being fine-tuned!}).
+%%  \end{itemize}
+%%  \vspace{0.2cm}
+%%
+%%  \begin{columns}
+%%    \column{0.48\textwidth}
+%%      \centering
+%%      \includegraphics[width=0.95\textwidth]{hip_vs_cuda_32c64} \\
+%%      (full HMC run, thermalised configuration, comparable acceptance rate)
+%%    \column{0.52\textwidth}
+%%      \begin{tabular}{cccc}
+%%        $(M_\pi / M_\pi^{\mathrm{phys}})^2$ & \cellcolor{green!50} time A100 [h] & \cellcolor{red!35}time MI250 [h] & ratio \\
+%%        \hline \hline 
+%%        3.75                                & 0.411         & 0.546          & 1.33 \\
+%%        2.25                                & 0.478         & 0.762          & 1.59 \\
+%%        1.50                                & 0.487         & 0.798          & 1.64 \\
+%%        1.00                                & 0.542         & 0.975          & 1.80
+%%      \end{tabular}
+%%      \vspace{0.2cm}
+%%      \begin{itemize}
+%%        \item Time investment (for us)\footnote{major thanks to B{\'a}lint Jo{\'o} and QUDA devs for many hundreds of hours of effort which make this possible!}: 
+%%        \begin{itemize}
+%%          \item 2-3 hours to adjust tmLQCD build system \& compile code
+%%          \item few hours with JSC admins and AMD experts to resolve a few ROCm issues
+%%          \vspace{0.2cm}
+%%          \item[!] get an HMC which runs on MI-250 and is \textit{at most} a factor of 2 slower even at the physical point (at least on a single node) $\rightarrow$ excellent!
+%%        \end{itemize}
+%%      \end{itemize}
+%%  \end{columns}
+%%\end{frame}
 
 %\begin{frame}{Origin of the performance difference?}{Fine-grid operator benchmark (single precision)}
 %  \begin{columns}
