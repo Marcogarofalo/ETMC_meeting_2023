@@ -91,31 +91,37 @@
 %
 %\end{frame}
 
-\begin{frame}{The cost of ensemble generation (at phys. $M_\pi$ on CPU machines)}
-  \centering
-  \includegraphics[height=65mm,clip,trim = 46mm 0 0 0]{ensembles_asquared_mpi}
-  \includegraphics[height=65mm]{ensembles_phys_point}
+\begin{frame}{Ensembles generation (at phys. $M_\pi$ on CPU machines)}
+ 	\begin{columns}
+ 		\begin{column}{0.5\textwidth}
+ 	\includegraphics[height=70mm,clip,trim = 46mm 0 0 0]{ensembles_asquared_mpi}
+ 	\includegraphics[height=70mm]{ensembles_phys_point}
+ 		\end{column}
+ 		\begin{column}{0.5\textwidth}
+ 			\begin{hpcablock}{}
+ 				\begin{itemize}
+ 				%	\item State-of-the-art \textcolor{red}{integrator} \& \textcolor{blue}{solvers} $\rightarrow$ cost scales like $(L/a)^{9/2}$ at (roughly) constant acceptance
+ 					\vspace{0.19cm}
+ 					\item need several further ensembles at larger $M_\pi \cdot L$ 
+ 					\vspace{0.19cm}
+ 					\begin{itemize}
+ 						\item both at the finest and the coarsest lattice spacings
+ 						\begin{itemize}
+ 							\item more statistics needed due to autocorrelations (critical slowing down and pion mass splitting)
+ 						\end{itemize}
+ 					\end{itemize}
+ 					%\item \textcolor{red}{cost $\mathcal{O}(10^{9})$ core-hours} \& real time per trajectory $\geq$ 6 hours at this stage
+ 					\vspace{0.19cm}
+ 					\item \textbf{Need GPU implementations}
+ 				\end{itemize}
+ 			\end{hpcablock}
+ 		\end{column}
+ 	\end{columns}
+  
   \,\,\,\,\,
-  \includegraphics[height=65mm]{corehrs_per_traj}
+ % \includegraphics[height=65mm]{corehrs_per_traj}
 
-  \begin{hpcablock}{}
-    \footnotesize
-    \begin{itemize}
-      \item State-of-the-art \textcolor{red}{integrator} \& \textcolor{blue}{solvers} $\rightarrow$ cost scales like $(L/a)^{9/2}$ at (roughly) constant acceptance
-      \vspace{0.19cm}
-      \item need several further ensembles at larger $M_\pi \cdot L$ 
-      \vspace{0.19cm}
-      \begin{itemize}
-        \item both at the finest and the coarsest lattice spacings
-          \begin{itemize}
-            \item more statistics needed due to autocorrelations (critical slowing down and pion mass splitting)
-          \end{itemize}
-      \end{itemize}
-      \item \textcolor{red}{cost $\mathcal{O}(10^{9})$ core-hours} \& real time per trajectory $\geq$ 6 hours at this stage
-      \vspace{0.19cm}
-      \item \textbf{Absolutely need GPU implementations of everything}
-    \end{itemize}
-  \end{hpcablock}
+  
 \end{frame}
 
 \begin{frame}{The tmLQCD software suite}{[\href{https://doi.org/10.1016/j.cpc.2009.05.016}{10.1016/j.cpc.2009.05.016}, \href{https://doi.org/10.22323/1.187.0416}{10.22323/1.187.0416}, \href{https://doi.org/10.22323/1.187.0414}{10.22323/1.187.0414}, \href{https://www.github.com/etmc/tmLQCD}{gh.com/etmc/tmLQCD}]}
