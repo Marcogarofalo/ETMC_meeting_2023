@@ -62,7 +62,7 @@
 \title[tmLQCD + QUDA]{Twisted mass ensemble generation on GPU machines}
 \author[M.~Garofalo / B.~Kostrzewa]{M.~Garofalo, B.~Kostrzewa, S.~Romiti, C.~Urbach \\ S.~Bacchio, J.~Finkenrath, F.~Pittler}
 \institute[HISKP / HPC/A-Lab, Bonn~U.]{Helmholtz-Institut für Strahlen- und Kernphysik (HISKP) \&\\High Performance Computing \& Analytics Lab (HPC/A-Lab),\\ Rheinische Friedrich-Wilhelms-Universit{\"a}t Bonn}
-\date[Febrary 8th, ETMC meeting 2023 Bern]{Febrary 8th, ETMC meeting 2023, Bern}
+\date[February 8th, ETMC meeting 2023 Bern]{February 8th, ETMC meeting 2023, Bern}
 \titlegraphic{\roundbox{\includegraphics[height=2.5cm]{uni_bonn_hpca_hiskp_CyI_etmc}}}
 \subject{Twisted mass ensemble generation on GPU machines (using tmLQCD and the QUDA library)}
 \keywords{Lattice QCD, HMC, GPU, QUDA, simulation, tmLQCD}
@@ -587,8 +587,8 @@ tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
       lattice size     & real time  & 1 year              & \# GPUs & GPU-hours & 1.25 mio GPUh \\
                        & per traj.  & (2 replicas)        &         & per traj. &               \\
       \hline \\                                           
-      $64^3\cdot128$   &  $1.6$ h   & 10500 traj.         &  32     &   51      & 24000 traj.   \\
-      $80^3\cdot160$   &  $1.8$ h   & 9600 traj.          &  80     &  139      &  9000 traj.   \\
+      $64^3\cdot128$   &  $1.6$ h   & \textcolor{red}{10500 traj.}         &  32     &   51      & 24000 traj.   \\
+      $80^3\cdot160$   &  $1.8$ h   & \textcolor{red}{9600 traj.}          &  80     &  139      &  9000 traj.   \\
       $96^3\cdot192$   &  $2.2$ h   & 7600 traj.          & 144     &  317      &  3940 traj.   \\
       $112^3\cdot224$  &  $2.8$ h   & 5900 traj.          & 224     &  635      &  \textcolor{red}{1950 traj.}   \\    
       $128^3\cdot256$  &  $2.3$ h   & 7400 traj.          & 512     & 1158      &  \textcolor{red}{1080 traj.}   \\
